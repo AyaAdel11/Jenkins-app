@@ -39,12 +39,10 @@ pipeline {
 		stage("Build & Push Docker Image") {
 		    steps {
 		        script {
-		            // 1. بناء الصورة
+		            
 		            sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
 		            sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest"
 		
-		            // 2. تسجيل الدخول والرفع
-		            // ملاحظة: DOCKER_PASS هنا هو الـ ID بتاع الـ Credentials في جينكينز
 		            withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
 		                sh "echo \$PASS | docker login -u \$USER --password-stdin"
 		                sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
@@ -53,6 +51,25 @@ pipeline {
 		        }
 		    }
 		}
+	  stage("Update Deployment File") {
+            steps {
+                script {
+                    sh "sed -i 's|image: ${IMAGE_NAME}:.*|image: ${IMAGE_NAME}:${IMAGE_TAG}|g' deployment.yaml"
+                }
+            }
+        }
+
+        stage("Deploy to K8s") {
+            steps {
+                sh "kubectl apply -f deployment.yaml"
+            }
+        }
+
+        stage("Cleanup Local Images") {
+            steps {
+                sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest || true"
+            }
+        }
 
 
 
