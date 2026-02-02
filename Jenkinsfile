@@ -33,6 +33,14 @@ pipeline {
                  sh "mvn test"
            }
        }
+	  stage('Build Docker image') {
+            steps {
+                echo 'Building Docker Image...'
+                script {
+                    sh "docker build -t ${DOCKER_HUB_USER}/${IMAGE_NAME}:${IMAGE_TAG} ."
+                }
+            }
+        }
 
 
   }
