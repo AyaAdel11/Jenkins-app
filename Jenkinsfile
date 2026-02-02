@@ -2,10 +2,12 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_HUB_USER = 'AyaAdel11' 
-        IMAGE_NAME      = 'jenkins-app'
-        IMAGE_TAG       = "${env.BUILD_NUMBER}"
-        DOCKER_CREDS_ID = 'dockerhub' 
+			APP_NAME = 'jenkins-app'
+        	RELEASE = "1.0.0"
+            DOCKER_USER = "ayaadel02"
+            DOCKER_PASS = 'dockerhub'
+            IMAGE_NAME = "${DOCKER_USER}" + "/" + "${APP_NAME}"
+            IMAGE_TAG = "${RELEASE}-${BUILD_NUMBER}" 
     }
 
   stages {
@@ -33,14 +35,23 @@ pipeline {
                  sh "mvn test"
            }
        }
-	  stage('Build Docker image') {
+	  
+	  	stage("Build & Push Docker Image") {
             steps {
-                echo 'Building Docker Image...'
                 script {
-                    sh "docker build -t ${DOCKER_HUB_USER}/${IMAGE_NAME}:${IMAGE_TAG} ."
+                    docker.withRegistry('',DOCKER_PASS) {
+                    	docker_image = docker.build "${IMAGE_NAME}"
+                    }
+
+                    docker.withRegistry('',DOCKER_PASS) {
+                        docker_image.push("${IMAGE_TAG}")
+                        docker_image.push('latest')
+                    }
                 }
             }
-        }
+
+       }
+
 
 
   }
