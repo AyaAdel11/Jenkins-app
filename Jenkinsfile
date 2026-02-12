@@ -43,8 +43,9 @@ pipeline {
         stage("Build Docker Image") {
             steps {
                 buildImage("${IMAGE_NAME}:${IMAGE_TAG}")
-                // عمل Tag للـ latest محلياً
+                sh "docker rmi ${IMAGE_NAME}:latest || true"
                 sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest"
+                
             }
         }
 
