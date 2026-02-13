@@ -67,19 +67,27 @@ pipeline {
             }
         }
 
-        stage("Update Deployment File") {
-            steps {
-                sh "sed -i 's|image: ${IMAGE_NAME}:.*|image: ${IMAGE_NAME}:${IMAGE_TAG}|g' deployment.yaml"
-            }
+        stage("Update Manifest & Push to GitHub") {
+    steps {
+        // 1. تعديل رقم الـ Tag في ملف الـ yaml
+        sh "sed -i 's|image: ${IMAGE_NAME}:.*|image: ${IMAGE_NAME}:${IMAGE_TAG}|g' deployment.yaml"
+        
+        // 2. رفع التعديل للـ GitHub باستخدام Credentials الـ SSH أو الـ Token
+        withCredentials([usernamePassword(credentialsId: 'github', passwordVariable: 'GIT_PASS', usernameVariable: 'GIT_USER')]) {
+            sh """
+                git config user.email "jenkins-bot@example.com"
+                git config user.name "Jenkins Bot"
+                git add deployment.yaml
+                git commit -m "Update image to ${IMAGE_TAG} [skip ci]"
+                
+                # إعداد الـ URL ليشمل الـ Credentials للرفع
+                git push https://${GIT_USER}:${GIT_PASS}@github.com/AyaAdel11/Jenkins-app.git main
+            """
         }
+    }
+}
 
-        // 7. النشر باستخدام المكتبة
-        stage("Deploy to K8s") {
-            steps {
-                deployOnK8s("deployment.yaml")
-            }
-        }
-
+        
         // 8. التنظيف باستخدام المكتبة
         stage("Cleanup Local Images") {
             steps {
