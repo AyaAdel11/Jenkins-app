@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: jenkins-app
-        image: AyaAdel11/jenkins-app:1.0.10
+        image: ayaadel02/jenkins-app:1.0.0-22
         ports:
         - containerPort: 8080 
 ---
